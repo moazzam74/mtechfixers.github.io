@@ -94,9 +94,12 @@ function build() {
     const lap = add(s, `<div class="laptop" style="left:70px;top:720px;width:860px"><div class="lid"><div class="scr"><img src="${OUT + site.desktopFull}"></div></div><div class="base"></div></div>`);
     anim(lap, [{ opacity: 0, transform: 'translateY(260px) scale(.9)' }, { opacity: 1, transform: 'none' }], t0 + 0.25, 0.8);
     const limg = lap.querySelector('img');
-    const ph = add(s, `<div class="phone" style="left:720px;top:860px;width:270px;transform:rotate(5deg)"><div class="island"></div><div class="scr"><img src="${OUT + site.mobileFull}"></div></div>`);
-    anim(ph, [{ opacity: 0, transform: 'translateX(320px) rotate(18deg)' }, { opacity: 1, transform: 'rotate(5deg)' }], t0 + 0.6, 0.8);
-    const pimg = ph.querySelector('img');
+    let pimg = null;
+    if (site.mobileFull) {
+      const ph = add(s, `<div class="phone" style="left:720px;top:860px;width:270px;transform:rotate(5deg)"><div class="island"></div><div class="scr"><img src="${OUT + site.mobileFull}"></div></div>`);
+      anim(ph, [{ opacity: 0, transform: 'translateX(320px) rotate(18deg)' }, { opacity: 1, transform: 'rotate(5deg)' }], t0 + 0.6, 0.8);
+      pimg = ph.querySelector('img');
+    }
     // scroll distances are worked out from the real image sizes
     const scrollAnim = (img, frac, start) => {
       const bh = img.parentElement.offsetHeight;
@@ -106,7 +109,7 @@ function build() {
       anim(img, [{ transform: 'translateY(0)' }, { transform: `translateY(-${dist}px)` }], start, T_SITE - 1.4, { easing: 'cubic-bezier(.45,0,.35,1)' });
     };
     scrollAnim(limg, 0.42, t0 + 1.0);
-    scrollAnim(pimg, 0.38, t0 + 1.2);
+    if (pimg) scrollAnim(pimg, 0.38, t0 + 1.2);
 
     // feature checks
     const feats = (site.features || ['Mobile friendly', 'Click to call', 'Fast loading']).slice(0, 3);
@@ -133,7 +136,7 @@ function build() {
 }
 
 const FONTS = ['500','600','700','800'].map(w => document.fonts.load(w + ' 40px Jakarta')).concat(['400','500','600','700'].map(w => document.fonts.load(w + ' 40px Inter')));
-const pre = (D.sites || []).flatMap(s => [s.desktopFull, s.mobileFull]).map(src => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = OUT + src; }));
+const pre = (D.sites || []).flatMap(s => [s.desktopFull, s.mobileFull]).filter(Boolean).map(src => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = OUT + src; }));
 Promise.all(FONTS.concat(pre)).then(() => {
   build();
   Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })))
