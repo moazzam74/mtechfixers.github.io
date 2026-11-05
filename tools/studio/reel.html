@@ -1,0 +1,142 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="brand.css">
+<style>
+  .scene { position: absolute; inset: 0; top: 60px; opacity: 0; }
+  .badge { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; z-index: 6;
+    background: #fff; border-radius: 999px; padding: 14px 30px 14px 14px; box-shadow: 0 20px 40px -18px rgba(15,23,42,.4); font: 800 34px 'Jakarta'; letter-spacing: -.02em; white-space: nowrap; }
+  .badge .n { width: 66px; height: 66px; border-radius: 50%; background: var(--grad); color: #fff; display: grid; place-items: center; font: 800 32px 'Jakarta'; }
+  .word { display: inline-block; }
+  .prog { position: absolute; left: 70px; right: 70px; top: 200px; height: 8px; display: flex; gap: 10px; z-index: 7; }
+  .prog i { flex: 1; border-radius: 8px; background: rgba(11,16,32,.12); overflow: hidden; }
+  .prog i b { display: block; height: 100%; width: 100%; background: var(--grad); transform-origin: left; transform: scaleX(0); }
+</style>
+<script>/*__DATA__*/</script>
+</head><body><div class="canvas" id="c"></div>
+<script>
+const D = window.DATA || {};
+const c = document.getElementById('c');
+const OUT = D._out || '', ROOT = D._root || '../../';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmt = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>').replace(/\*(.+?)\*/g, '<span class="hl">$1</span>').replace(/\n/g, '<br>');
+const add = (parent, html, style) => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstChild; if (style) Object.assign(n.style, style); parent.appendChild(n); return n; };
+const EASE = 'cubic-bezier(.2,.9,.25,1.05)';
+const anim = (n, kf, start, dur, opt = {}) => n.animate(kf, Object.assign({ delay: start * 1000, duration: dur * 1000, fill: 'both', easing: EASE }, opt));
+const TICK = '<svg viewBox="0 0 24 24" style="fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const CHATBUB = '<svg viewBox="0 0 24 24" style="fill:none;stroke:#5334f1;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4"/></svg>';
+
+function fit(n, maxH, size, min) {
+  let f = size; n.style.fontSize = f + 'px';
+  const big = () => n.scrollHeight > maxH || [...n.querySelectorAll('.hl')].some(h => h.getBoundingClientRect().width > n.clientWidth + 2);
+  while (big() && f > min) { f -= 2; n.style.fontSize = f + 'px'; }
+}
+function sparkle(p, x, y, rot = 0, s = 1) {
+  return add(p, `<svg class="dd" viewBox="0 0 100 100" style="left:${x}px;top:${y}px;width:${100*s}px;height:${100*s}px;transform:rotate(${rot}deg)"><line x1="20" y1="50" x2="2" y2="50"/><line x1="34" y1="26" x2="22" y2="8"/><line x1="34" y1="74" x2="22" y2="92"/></svg>`);
+}
+function swooshes() {
+  const g = `<defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#5334f1"/><stop offset="1" stop-color="#1575f5"/></linearGradient></defs>`;
+  const a = add(c, `<svg class="blob" viewBox="0 0 300 300" style="left:-130px;top:300px;width:320px;height:320px">${g}<path d="M40 40 L 200 60 L 90 260" style="fill:none;stroke:url(#gg);stroke-width:58;stroke-linecap:round;stroke-linejoin:round"/></svg>`);
+  const b = add(c, `<svg class="blob" viewBox="0 0 300 300" style="right:-120px;top:1250px;width:320px;height:320px"><path d="M250 40 C 120 80, 90 160, 230 270" style="fill:none;stroke:url(#gg);stroke-width:58;stroke-linecap:round"/></svg>`);
+  anim(a, [{ transform: 'translateX(-200px) rotate(-20deg)' }, { transform: 'none' }], 0.1, 0.9);
+  anim(b, [{ transform: 'translateX(200px) rotate(20deg)' }, { transform: 'none' }], 0.2, 0.9);
+}
+function headline(p, text, top, size, maxH) {
+  const h = add(p, `<div class="h1">${fmt(text)}</div>`, { position: 'absolute', left: '80px', right: '80px', top: top + 'px', zIndex: 5 });
+  fit(h, maxH || 300, size || 104, 56);
+  return h;
+}
+function scene(start, end) {
+  const s = add(c, `<div class="scene"></div>`);
+  anim(s, [{ opacity: 0 }, { opacity: 1 }], start, 0.35, { easing: 'ease-out' });
+  if (end) anim(s, [{ opacity: 1 }, { opacity: 0 }], end - 0.3, 0.3, { easing: 'ease-in', fill: 'forwards' });
+  return s;
+}
+function popIn(n, t, from = 'translateY(60px) scale(.92)') { anim(n, [{ opacity: 0, transform: from }, { opacity: 1, transform: getComputedStyle(n).transform === 'none' ? 'none' : getComputedStyle(n).transform }], t, 0.6); }
+
+const sites = (D.sites || []).slice(0, 3);
+const T_INTRO = 3.2, T_SITE = 4.6, T_OUT = 3.6;
+const DURATION = T_INTRO + sites.length * T_SITE + T_OUT;
+window.DURATION = DURATION;
+
+function build() {
+  swooshes();
+  // logo + handle on top
+  const top = add(c, `<div class="label" style="top:110px"><img src="${ROOT}brand/logo.png" style="height:60px"><div class="line"></div><b style="letter-spacing:.04em">@mtechfixers</b></div>`);
+  anim(top, [{ opacity: 0, transform: 'translateY(-30px)' }, { opacity: 1, transform: 'none' }], 0, 0.6);
+
+  // progress bars (one per site)
+  const prog = add(c, `<div class="prog">${sites.map(() => '<i><b></b></i>').join('')}</div>`);
+  [...prog.querySelectorAll('b')].forEach((b, i) => anim(b, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], T_INTRO + i * T_SITE, T_SITE, { easing: 'linear' }));
+
+  // ---- intro ----
+  const s0 = scene(0, T_INTRO);
+  const pill = add(s0, `<div class="pill">${esc(D.kicker || 'Real client projects')}</div>`, { position: 'absolute', left: '50%', top: '420px', transform: 'translateX(-50%)' });
+  popIn(pill, 0.2, 'translateX(-50%) translateY(40px)');
+  const h0 = headline(s0, D.title || `${sites.length} websites we built\nfor *small businesses*`, 510, 112, 380);
+  popIn(h0, 0.35);
+  const q = add(s0, `<div class="sub"><b>${esc(D.question || 'Which one is your favorite?')}</b><br>Comment 1, 2 or 3 below</div>`, { position: 'absolute', left: '90px', right: '90px', top: '940px', fontSize: '40px' });
+  popIn(q, 0.8);
+  const nums = add(s0, `<div style="position:absolute;left:0;right:0;top:1120px;display:flex;justify-content:center;gap:40px">${sites.map((s, i) => `<div class="badge" style="position:relative;left:auto;transform:none;padding:14px"><span class="n" style="width:110px;height:110px;font-size:56px">${i + 1}</span></div>`).join('')}</div>`);
+  [...nums.children].forEach((n, i) => anim(n, [{ opacity: 0, transform: 'scale(.4) rotate(-20deg)' }, { opacity: 1, transform: 'none' }], 1.1 + i * 0.18, 0.55));
+  sparkle(s0, 70, 470, 160, 1.1);
+  sparkle(s0, 930, 860, 20, 1.1);
+
+  // ---- one scene per website ----
+  sites.forEach((site, i) => {
+    const t0 = T_INTRO + i * T_SITE, t1 = t0 + T_SITE;
+    const s = scene(t0, t1);
+    const badge = add(s, `<div class="badge" style="top:300px"><span class="n">${i + 1}</span><span>${esc(site.niche || 'Small Business')}</span></div>`);
+    popIn(badge, t0 + 0.1, 'translateX(-50%) translateY(-40px)');
+    const h = headline(s, site.title || 'Website for a\n*' + (site.niche || 'Local Business') + '*', 430, 84, 200);
+    popIn(h, t0 + 0.2);
+
+    // laptop with auto-scrolling screenshot
+    const lap = add(s, `<div class="laptop" style="left:70px;top:720px;width:860px"><div class="lid"><div class="scr"><img src="${OUT + site.desktopFull}"></div></div><div class="base"></div></div>`);
+    anim(lap, [{ opacity: 0, transform: 'translateY(260px) scale(.9)' }, { opacity: 1, transform: 'none' }], t0 + 0.25, 0.8);
+    const limg = lap.querySelector('img');
+    const ph = add(s, `<div class="phone" style="left:720px;top:860px;width:270px;transform:rotate(5deg)"><div class="island"></div><div class="scr"><img src="${OUT + site.mobileFull}"></div></div>`);
+    anim(ph, [{ opacity: 0, transform: 'translateX(320px) rotate(18deg)' }, { opacity: 1, transform: 'rotate(5deg)' }], t0 + 0.6, 0.8);
+    const pimg = ph.querySelector('img');
+    // scroll distances are worked out from the real image sizes
+    const scrollAnim = (img, frac, start) => {
+      const bh = img.parentElement.offsetHeight;
+      const ih = img.offsetHeight;
+      const max = Math.max(0, ih - bh);
+      const dist = Math.min(max, ih * frac);
+      anim(img, [{ transform: 'translateY(0)' }, { transform: `translateY(-${dist}px)` }], start, T_SITE - 1.4, { easing: 'cubic-bezier(.45,0,.35,1)' });
+    };
+    scrollAnim(limg, 0.42, t0 + 1.0);
+    scrollAnim(pimg, 0.38, t0 + 1.2);
+
+    // feature checks
+    const feats = (site.features || ['Mobile friendly', 'Click to call', 'Fast loading']).slice(0, 3);
+    const ck = add(s, `<div style="position:absolute;left:80px;top:1330px;display:flex;flex-direction:column;gap:14px;z-index:6">${feats.map(f => `<div class="check" style="margin:0;background:#fff;border-radius:999px;padding:10px 26px 10px 10px;box-shadow:0 14px 30px -16px rgba(15,23,42,.35);font-size:28px"><span class="tick">${TICK}</span><span>${esc(f)}</span></div>`).join('')}</div>`);
+    [...ck.children].forEach((n, k) => anim(n, [{ opacity: 0, transform: 'translateX(-80px)' }, { opacity: 1, transform: 'none' }], t0 + 1.4 + k * 0.25, 0.5));
+    sparkle(s, 30, 660, 160, 1); sparkle(s, 960, 640, 20, 1);
+  });
+
+  // ---- outro ----
+  const tO = T_INTRO + sites.length * T_SITE;
+  const so = scene(tO, 0);
+  const pill2 = add(so, `<div class="pill">Free offer</div>`, { position: 'absolute', left: '50%', top: '400px', transform: 'translateX(-50%)' });
+  popIn(pill2, tO + 0.1, 'translateX(-50%) translateY(40px)');
+  const ho = headline(so, D.outro || 'Want a website\n*like this?*', 490, 120, 330);
+  popIn(ho, tO + 0.2);
+  const so2 = add(so, `<div class="sub" style="font-size:40px">Comment <b>'WEBSITE'</b> and I'll make a <b>free demo homepage</b> for your business.</div>`, { position: 'absolute', left: '110px', right: '110px', top: '860px' });
+  popIn(so2, tO + 0.5);
+  const card = add(so, `<div class="card" style="left:190px;right:190px;top:1060px;transform:rotate(-2deg)">${['Your photos & logo', 'Mobile friendly', 'No obligation'].map(t => `<div class="check"><span class="tick">${TICK}</span><span>${t}</span></div>`).join('')}</div>`);
+  popIn(card, tO + 0.7);
+  const btn = add(so, `<div class="cta" style="top:1340px;bottom:auto"><span class="bub">${CHATBUB}</span><span>Comment 'WEBSITE'</span></div>`);
+  anim(btn, [{ opacity: 0, transform: 'translateX(-50%) scale(.6)' }, { opacity: 1, transform: 'translateX(-50%) scale(1)' }], tO + 1.0, 0.6);
+  anim(btn.querySelector('.bub'), [{ transform: 'scale(1)' }, { transform: 'scale(1.15) rotate(-8deg)' }, { transform: 'scale(1)' }], tO + 1.8, 0.8, { iterations: 2, easing: 'ease-in-out' });
+  sparkle(so, 60, 450, 160, 1.2); sparkle(so, 920, 800, 20, 1.2);
+}
+
+const FONTS = ['500','600','700','800'].map(w => document.fonts.load(w + ' 40px Jakarta')).concat(['400','500','600','700'].map(w => document.fonts.load(w + ' 40px Inter')));
+const pre = (D.sites || []).flatMap(s => [s.desktopFull, s.mobileFull]).map(src => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = OUT + src; }));
+Promise.all(FONTS.concat(pre)).then(() => {
+  build();
+  Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })))
+    .then(() => setTimeout(() => { window.READY = true; }, 200));
+});
+</script></body></html>
