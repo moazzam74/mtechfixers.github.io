@@ -123,13 +123,25 @@ def page_for(browser, job, out_dir):
     html = html.replace("/*__DATA__*/", "window.DATA = " + json.dumps(data) + ";")
     tmp = os.path.join(TPL, f"_tmp_{os.getpid()}_{int(time.time()*1000)}.html")
     open(tmp, "w", encoding="utf-8").write(html)
-    page.goto("file://" + tmp)
-    page.wait_for_function("window.READY === true", timeout=30000)
-    os.remove(tmp)
+    try:
+        page.goto("file://" + tmp)
+        page.wait_for_function("window.READY === true", timeout=30000)
+    except Exception:
+        ctx.close()
+        raise
+    finally:
+        os.remove(tmp)
     return ctx, page
 
 
+def missing(job, out_dir):
+    need = job.get("requires", [])
+    return [f for f in need if not os.path.exists(os.path.join(out_dir, f))]
+
+
 def render(browser, job, out_dir):
+    if missing(job, out_dir):
+        return "skipped"
     ctx, page = page_for(browser, job, out_dir)
     try:
         page.screenshot(path=os.path.join(out_dir, job["out"]), type="jpeg", quality=94)
@@ -140,6 +152,15 @@ def render(browser, job, out_dir):
 def video(browser, job, out_dir):
     """Capture an animated HTML template frame by frame and encode an MP4 with music."""
     ensure_ffmpeg()
+    if job.get("data", {}).get("sites"):
+        # drop websites whose screenshots could not be taken
+        job["data"]["sites"] = [s for s in job["data"]["sites"]
+                                if os.path.exists(os.path.join(out_dir, s.get("desktopFull", "-")))]
+        for s in job["data"]["sites"]:
+            if not os.path.exists(os.path.join(out_dir, s.get("mobileFull", "-"))):
+                s["mobileFull"] = s["desktopFull"]
+        if not job["data"]["sites"]:
+            raise RuntimeError("no website screenshots available for the reel")
     fps = job.get("fps", 30)
     ctx, page = page_for(browser, job, out_dir)
     dur = page.evaluate("window.DURATION || 15")
