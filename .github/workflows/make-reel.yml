@@ -1,0 +1,27 @@
+name: make-reel
+on:
+  push:
+    paths:
+      - 'reel-requests/**'
+permissions:
+  contents: write
+concurrency:
+  group: make-reel
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: pip install numpy
+      - name: Make reel
+        run: python3 tools/make_reel.py
+      - name: Save reel
+        run: |
+          git config user.name "reel-bot"
+          git config user.email "reel-bot@users.noreply.github.com"
+          git add reels || true
+          git commit -m "Make reel" || echo "nothing new"
+          git pull --rebase
+          git push
