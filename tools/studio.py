@@ -119,6 +119,7 @@ def page_for(browser, job, out_dir):
     data = dict(job.get("data", {}))
     data["_root"] = "file://" + ROOT + "/"
     data["_out"] = "file://" + os.path.join(ROOT, out_dir) + "/"
+    data["_files"] = sorted(os.listdir(out_dir)) if os.path.isdir(out_dir) else []
     html = open(os.path.join(TPL, tpl + ".html"), encoding="utf-8").read()
     html = html.replace("/*__DATA__*/", "window.DATA = " + json.dumps(data) + ";")
     tmp = os.path.join(TPL, f"_tmp_{os.getpid()}_{int(time.time()*1000)}.html")
@@ -158,7 +159,7 @@ def video(browser, job, out_dir):
                                 if os.path.exists(os.path.join(out_dir, s.get("desktopFull", "-")))]
         for s in job["data"]["sites"]:
             if not os.path.exists(os.path.join(out_dir, s.get("mobileFull", "-"))):
-                s["mobileFull"] = s["desktopFull"]
+                s["mobileFull"] = ""
         if not job["data"]["sites"]:
             raise RuntimeError("no website screenshots available for the reel")
     fps = job.get("fps", 30)
