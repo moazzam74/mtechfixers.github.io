@@ -36,6 +36,18 @@ body { background: var(--paper); overflow: hidden; -webkit-font-smoothing: antia
 .foot img { height: 58px; }
 .foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
 .arch { position: absolute; left: 70px; right: 70px; z-index: 1; }
+/* night theme: deep emerald with gold */
+body.night { background: #0b3a2f; }
+body.night .canvas { background: radial-gradient(1100px 800px at 50% 0%, #135443 0%, rgba(19,84,67,0) 70%), radial-gradient(900px 700px at 50% 110%, rgba(217,178,106,.14), transparent 70%), #0b3a2f; }
+body.night .pattern { opacity: .13; }
+body.night .ar { color: #f3d99a; }
+body.night .ur { color: #f5efe0; }
+body.night .pill { background: #f3d99a; color: #0b3a2f; }
+body.night .pill .ur2 { color: #0b3a2f; }
+body.night .pill .sep { background: rgba(11,58,47,.4); }
+body.night .ref { color: #f3d99a; background: rgba(243,217,154,.10); border-color: #d9b26a; }
+body.night .foot { color: #f3d99a; }
+body.night .foot img { filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg); opacity: .9; }
 </style>
 <script>/*__DATA__*/</script>
 </head><body><div class="canvas" id="c"></div>
@@ -61,10 +73,11 @@ const ORN = `<svg class="orn" viewBox="0 0 420 34"><g fill="none" stroke="#b8893
   <path d="M170 17 L190 5 L210 17 L190 29 Z" fill="#d9b26a"/><path d="M210 17 L230 5 L250 17 L230 29 Z"/><circle cx="160" cy="17" r="3.5" fill="#b8893a"/><circle cx="260" cy="17" r="3.5" fill="#b8893a"/></g></svg>`;
 const DIV = `<svg class="div" viewBox="0 0 260 26"><g fill="none" stroke="#b8893a" stroke-width="2" stroke-linecap="round"><path d="M10 13 H100 M160 13 H250"/><path d="M130 3 L140 13 L130 23 L120 13 Z" fill="#d9b26a"/><circle cx="108" cy="13" r="3" fill="#b8893a"/><circle cx="152" cy="13" r="3" fill="#b8893a"/></g></svg>`;
 
-const isAyah = D.kind === 'ayah';
+const isAyah = D.kind === 'ayah' || D.kind === 'dua';
+if (D.theme === 'night') document.body.classList.add('night');
 const top0 = TALL ? 210 : 92;
 add(`<div class="head" style="top:${top0}px">
-  <div class="pill"><span>${isAyah ? 'Ayah of the Day' : 'Hadith of the Day'}</span><span class="sep"></span><span class="ur2">${isAyah ? 'آج کی آیت' : 'آج کی حدیث'}</span></div>${ORN}</div>`);
+  <div class="pill"><span>${D.kind === 'dua' ? 'Dua from the Quran' : isAyah ? 'Ayah of the Day' : 'Hadith of the Day'}</span><span class="sep"></span><span class="ur2">${D.kind === 'dua' ? 'قرآنی دعا' : isAyah ? 'آج کی آیت' : 'آج کی حدیث'}</span></div>${ORN}</div>`);
 
 const foot = add(`<div class="foot" style="bottom:${TALL ? 200 : 84}px"><img src="${ROOT}brand/eoi-logo.png" onerror="this.style.display='none'"><span class="dot"></span><span>@educationofislam9</span><span class="dot"></span><span>educationofislam.com</span></div>`);
 
@@ -77,7 +90,8 @@ const body = add(`<div class="body" style="top:${bodyTop}px;bottom:${bodyBottom}
 function fitAll() {
   // shrink Arabic and Urdu together until everything fits inside the body box
   const ar = document.getElementById('ar'), ur = document.getElementById('ur');
-  let a = D.ar_size || (isAyah ? (TALL ? 96 : 86) : (TALL ? 74 : 64)), u = D.ur_size || (isAyah ? (TALL ? 52 : 46) : (TALL ? 46 : 40));
+  const big = isAyah || String(D.arabic || '').length < 170;
+  let a = D.ar_size || (big ? (TALL ? 92 : 80) : (TALL ? 74 : 64)), u = D.ur_size || (big ? (TALL ? 52 : 46) : (TALL ? 46 : 40));
   const avail = body.clientHeight;
   const content = () => [...body.children].reduce((s, n) => s + n.getBoundingClientRect().height, 0) + 26 * (body.children.length - 1);
   ar.style.fontSize = a + 'px'; ur.style.fontSize = u + 'px';
