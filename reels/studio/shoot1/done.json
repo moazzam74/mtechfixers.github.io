@@ -1,0 +1,33 @@
+{
+ "id": "shoot1",
+ "ok": true,
+ "jobs": [
+  {
+   "type": "shoot",
+   "out": "grip",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 44.8
+  },
+  {
+   "type": "shoot",
+   "out": "thinbrown",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 22.2
+  },
+  {
+   "type": "shoot",
+   "out": "rosanna",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 50.0
+  }
+ ]
+}
