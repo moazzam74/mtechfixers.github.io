@@ -104,7 +104,8 @@ function swipe(x, y) {
 function foot() { el(`<div class="foot"><b>@mtechfixers</b> &nbsp;·&nbsp; Websites for small businesses &nbsp;·&nbsp; mtechfixers.com</div>`, TALL ? { bottom: '120px' } : {}); }
 
 const S = D.shots || {};         // { desktop, desktopFull, mobile, mobileFull }
-const img = k => OUT + (S[k] || S.desktop || '');
+const has = k => !!S[k] && (!D._files || D._files.includes(S[k]));
+const img = k => OUT + (has(k) ? S[k] : (S.desktop || ''));
 const dy = TALL ? 250 : 0;       // extra vertical room on 1080x1920 stories
 
 // ---------- layouts ----------
@@ -114,8 +115,8 @@ L.p_hook = () => {
   swoosh('tl'); swoosh('br');
   label(D.n || '01', D.label || 'New Project');
   topStack(D.title || 'We built a website for a\n*Roofing Company*', D.sub || 'Swipe to see the full build →', { maxH: 230, size: 92 });
-  laptop(110, 560 + dy * 1.4, 760, img('desktop'));
-  phone(780, 640 + dy * 1.4, 220, img('mobile'), 0, 4);
+  if (has('mobile')) { laptop(110, 560 + dy * 1.4, 760, img('desktop')); phone(780, 640 + dy * 1.4, 220, img('mobile'), 0, 4); }
+  else laptop(90, 540 + dy * 1.4, 900, img('desktop'));
   sparkle(60, 520 + dy * 1.4, 160, 1); sparkle(925, 545 + dy * 1.4, 20, 0.9);
   curlyArrowDown(855, 330 + dy, 0.9);
   if (TALL) cta(D.cta || "Comment 'WEBSITE'", 300); else swipe(780, 1222);
