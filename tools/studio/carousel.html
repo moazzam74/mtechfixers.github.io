@@ -1,0 +1,239 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="brand.css">
+<script>/*__DATA__*/</script>
+</head><body><div class="canvas" id="c"></div>
+<script>
+const D = window.DATA || {};
+const W = innerWidth, H = innerHeight, TALL = H > 1500;
+const c = document.getElementById('c');
+const OUT = D._out || '', ROOT = D._root || '../../';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+// *word* = highlight box, _word_ = hand-drawn underline, \n = line break
+const fmt = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>')
+  .replace(/\*(.+?)\*/g, '<span class="hl">$1</span>')
+  .replace(/_(.+?)_/g, '<span class="u">$1<svg viewBox="0 0 300 30" preserveAspectRatio="none"><path d="M4 20 C 70 6, 150 4, 296 14" style="fill:none;stroke:#1575f5;stroke-width:8;stroke-linecap:round"/></svg></span>')
+  .replace(/\n/g, '<br>');
+const el = (html, style) => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstChild; if (style) Object.assign(n.style, style); c.appendChild(n); return n; };
+
+const ICON = {
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  map: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  mobile: '<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/>',
+  cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.4 11h11l2-8H6.2"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+  money: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5a5 5 0 0 1 6 5"/>'
+};
+const icon = (k, color='#1575f5', sw=2.2) => `<svg viewBox="0 0 24 24" style="fill:none;stroke:${color};stroke-width:${sw};stroke-linecap:round;stroke-linejoin:round">${ICON[k] || ICON.check || ICON.star}</svg>`;
+const TICK = '<svg viewBox="0 0 24 24" style="fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const CLIP = '<svg class="clip" viewBox="0 0 40 110"><path d="M28 30V86a10 10 0 0 1-20 0V22a14 14 0 0 1 28 0v62" style="fill:none;stroke:#1575f5;stroke-width:5;stroke-linecap:round"/></svg>';
+const CHATBUB = '<svg viewBox="0 0 24 24" style="fill:none;stroke:#5334f1;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4"/></svg>';
+
+// ---------- doodles ----------
+function sparkle(x, y, rot = 0, s = 1) {
+  el(`<svg class="dd" viewBox="0 0 100 100" style="left:${x}px;top:${y}px;width:${100*s}px;height:${100*s}px;transform:rotate(${rot}deg)">
+    <line x1="20" y1="50" x2="2" y2="50"/><line x1="34" y1="26" x2="22" y2="8"/><line x1="34" y1="74" x2="22" y2="92"/></svg>`);
+}
+function arrow(x, y, w, h, d, rot = 0) {
+  el(`<svg class="dd" viewBox="0 0 ${w} ${h}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;transform:rotate(${rot}deg)"><path d="${d}"/></svg>`);
+}
+function curlyArrowDown(x, y, s = 1, flip = false) {
+  el(`<svg class="dd" viewBox="0 0 120 200" style="left:${x}px;top:${y}px;width:${120*s}px;height:${200*s}px;transform:scaleX(${flip?-1:1})">
+   <path d="M30 6 C 110 30, 110 120, 40 186"/><path d="M40 186 L 72 178 M40 186 L 46 152"/></svg>`);
+}
+function swoosh(side) {
+  // big brand brush strokes bleeding off the edges (like the reference)
+  const g = `<defs><linearGradient id="g${side}" x1="0" x2="1"><stop offset="0" stop-color="#5334f1"/><stop offset="1" stop-color="#1575f5"/></linearGradient></defs>`;
+  if (side === 'tl') el(`<svg class="blob" viewBox="0 0 300 300" style="left:-120px;top:120px;width:300px;height:300px">${g}<path d="M40 40 L 200 60 L 90 260" style="fill:none;stroke:url(#gtl);stroke-width:58;stroke-linecap:round;stroke-linejoin:round"/></svg>`);
+  if (side === 'br') el(`<svg class="blob" viewBox="0 0 300 300" style="right:-110px;bottom:${TALL?260:150}px;width:300px;height:300px">${g}<path d="M250 40 C 120 80, 90 160, 230 270" style="fill:none;stroke:url(#gbr);stroke-width:58;stroke-linecap:round"/></svg>`);
+  if (side === 'bl') el(`<svg class="blob" viewBox="0 0 300 300" style="left:-150px;bottom:${TALL?300:120}px;width:300px;height:300px">${g}<circle cx="150" cy="150" r="96" style="fill:none;stroke:url(#gbl);stroke-width:52"/></svg>`);
+  if (side === 'tr') el(`<svg class="blob" viewBox="0 0 300 300" style="right:-130px;top:${TALL?330:210}px;width:300px;height:300px">${g}<path d="M60 250 Q 150 20 280 120" style="fill:none;stroke:url(#gtr);stroke-width:54;stroke-linecap:round"/></svg>`);
+}
+
+// ---------- building blocks ----------
+function label(n, text) {
+  el(`<div class="label"><b>${esc(n)}</b><span>/</span><span>${esc(text)}</span><div class="line"></div>
+      <img src="${ROOT}brand/logo.png"></div>`, TALL ? { top: '120px' } : {});
+}
+function fit(n, maxH, size, min) {
+  // shrink text until it fits the box height and no highlight overflows the width
+  let f = size;
+  n.style.fontSize = f + 'px';
+  const tooBig = () => n.scrollHeight > maxH || [...n.querySelectorAll('.hl')].some(h => h.getBoundingClientRect().width > n.clientWidth + 2);
+  while (tooBig() && f > min) { f -= 2; n.style.fontSize = f + 'px'; }
+  return f;
+}
+function topStack(title, sub, o = {}) {
+  const box = el(`<div></div>`, { position: 'absolute', left: (o.left || 70) + 'px', right: (o.right || 70) + 'px', top: ((o.top || 138) + dy) + 'px',
+    display: 'flex', flexDirection: 'column', alignItems: o.align === 'left' ? 'flex-start' : 'center', gap: (o.gap || 22) + 'px', zIndex: 5 });
+  const h = document.createElement('div'); h.className = 'h1'; h.innerHTML = fmt(title);
+  if (o.align === 'left') h.style.textAlign = 'left';
+  h.style.width = '100%'; box.appendChild(h);
+  fit(h, o.maxH || 250, o.size || 96, 54);
+  if (sub) { const p = document.createElement('div'); p.className = 'sub'; p.innerHTML = fmt(sub); p.style.maxWidth = (o.subW || 880) + 'px'; box.appendChild(p); fit(p, o.subH || 100, 33, 24); }
+  return box;
+}
+function laptop(x, y, w, img, pos) {
+  return el(`<div class="laptop" style="left:${x}px;top:${y}px;width:${w}px"><div class="lid"><div class="scr"><img src="${img}" onerror="this.style.visibility='hidden'" style="object-position:top;${pos||''}"></div></div><div class="base"></div></div>`);
+}
+function phone(x, y, w, img, offset, rot) {
+  return el(`<div class="phone" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${rot||0}deg)"><div class="island"></div><div class="scr"><img src="${img}" onerror="this.closest('.phone').style.display='none'" style="transform:translateY(-${offset||0}%)"></div></div>`);
+}
+function checklist(x, y, w, items, rot) {
+  return el(`<div class="card" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${rot||0}deg)">${CLIP}
+    ${items.map(t => `<div class="check"><span class="tick">${TICK}</span><span>${esc(t)}</span></div>`).join('')}</div>`);
+}
+function cta(text, bottom) {
+  return el(`<div class="cta"><span class="bub">${CHATBUB}</span><span>${esc(text)}</span></div>`, { bottom: bottom + 'px' });
+}
+function swipe(x, y) {
+  el(`<div class="swipe" style="left:${x}px;top:${y}px">SWIPE <span class="arr"><svg viewBox="0 0 24 24" width="34" height="34" style="fill:none;stroke:#fff;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>`);
+}
+function foot() { el(`<div class="foot"><b>@mtechfixers</b> &nbsp;·&nbsp; Websites for small businesses &nbsp;·&nbsp; mtechfixers.com</div>`, TALL ? { bottom: '120px' } : {}); }
+
+const S = D.shots || {};         // { desktop, desktopFull, mobile, mobileFull }
+const img = k => OUT + (S[k] || S.desktop || '');
+const dy = TALL ? 250 : 0;       // extra vertical room on 1080x1920 stories
+
+// ---------- layouts ----------
+const L = {};
+
+L.p_hook = () => {
+  swoosh('tl'); swoosh('br');
+  label(D.n || '01', D.label || 'New Project');
+  topStack(D.title || 'We built a website for a\n*Roofing Company*', D.sub || 'Swipe to see the full build →', { maxH: 230, size: 92 });
+  laptop(110, 560 + dy * 1.4, 760, img('desktop'));
+  phone(780, 640 + dy * 1.4, 220, img('mobile'), 0, 4);
+  sparkle(60, 520 + dy * 1.4, 160, 1); sparkle(925, 545 + dy * 1.4, 20, 0.9);
+  curlyArrowDown(855, 330 + dy, 0.9);
+  if (TALL) cta(D.cta || "Comment 'WEBSITE'", 300); else swipe(780, 1222);
+  foot();
+};
+
+L.p_desktop = () => {
+  swoosh('tr');
+  label(D.n || '02', D.label || 'Desktop View');
+  topStack(D.title || 'Clean, fast and\n*easy to book*', D.sub || '', { maxH: 230, size: 92, subW: 800 });
+  laptop(70, 520 + dy, 940, img('desktop'));
+  sparkle(30, 470 + dy, 160, 1.1); sparkle(960, 470 + dy, 20, 1);
+  swipe(780, 1222 + (TALL ? 400 : 0));
+  foot();
+};
+
+L.p_mobile = () => {
+  swoosh('bl');
+  label(D.n || '03', D.label || 'Mobile View');
+  topStack(D.title || 'Looks perfect\n*on every phone*', D.sub || 'Most customers visit from their phone, so we design mobile-first.', { maxH: 230, size: 92 });
+  phone(95, 600 + dy, 280, img('mobileFull'), 0, -5);
+  phone(400, 545 + dy, 280, img('mobileFull'), 18, 0);
+  phone(705, 600 + dy, 280, img('mobileFull'), 36, 5);
+  sparkle(30, 540 + dy, 160, 1); sparkle(975, 520 + dy, 20, 1);
+  foot();
+};
+
+L.p_features = () => {
+  swoosh('tl');
+  label(D.n || '04', D.label || "What's Inside");
+  topStack(D.title || 'Built to turn visitors\n*into customers*', '', { maxH: 230, size: 88 });
+  const feats = (D.features || []).slice(0, 6);
+  const t = el(`<div class="tiles">${feats.map(f => `<div class="tile"><div class="ic">${icon(f.icon)}</div><b>${esc(f.t)}</b><span>${esc(f.d)}</span></div>`).join('')}</div>`,
+    { position: 'absolute', left: '72px', right: '72px', top: (420 + dy) + 'px', zIndex: 5 });
+  arrow(470, 1165 + dy, 160, 120, 'M10 10 C 40 90, 110 100, 150 60 M150 60 L 118 58 M150 60 L 142 92');
+  el(`<div class="sub"><b>${esc(D.note || 'Every M Tech Fixers website includes these.')}</b></div>`, { position: 'absolute', left: '80px', right: '80px', top: (1120 + dy + (TALL?60:0)) + 'px', textAlign: 'center' });
+  foot();
+};
+
+L.p_process = () => {
+  swoosh('br');
+  label(D.n || '05', D.label || 'How It Works');
+  topStack(D.title || 'Your new website in\n*3 simple steps*', '', { maxH: 230, size: 92 });
+  const steps = D.steps || [];
+  steps.slice(0, 3).forEach((s, i) => {
+    el(`<div class="card" style="left:90px;right:90px;top:${450 + dy + i * 250}px;display:flex;align-items:center;gap:34px;padding:30px 40px;transform:rotate(${i===1?1:-1}deg)">
+      <div style="flex:none;width:110px;height:110px;border-radius:30px;background:var(--grad);display:grid;place-items:center;font:800 58px 'Jakarta';color:#fff">${i+1}</div>
+      <div><div style="font:800 38px/1.1 'Jakarta';letter-spacing:-.03em">${esc(s.t)}</div><div style="font:500 26px/1.35 'Inter';color:#4b5568;margin-top:8px">${esc(s.d)}</div></div></div>`);
+  });
+  sparkle(40, 430 + dy, 160, 1);
+  swipe(780, 1222 + (TALL ? 400 : 0));
+  foot();
+};
+
+L.p_cta = () => {
+  swoosh('tl'); swoosh('br');
+  label(D.n || '06', D.label || 'Take Action');
+  topStack(D.title || 'Want a website\n*like this?*', D.sub || "Comment <b>'WEBSITE'</b> and I'll make a <b>free demo homepage</b> for your business.", { maxH: 230, size: 100, subW: 820 });
+  laptop(70, 560 + dy, 640, img('desktop'));
+  checklist(640, 520 + dy, 380, D.checks || ['Free demo homepage', 'Your photos & logo', 'Mobile friendly', 'No obligation'], 4);
+  curlyArrowDown(800, 870 + dy, 0.85);
+  sparkle(40, 1080 + dy, 200, 1);
+  cta(D.cta || "Comment 'WEBSITE'", TALL ? 300 : 110);
+  if (!TALL) {} else foot();
+};
+
+// ----- tips carousel -----
+L.t_hook = () => {
+  swoosh('tl'); swoosh('br');
+  label(D.n || '01', D.label || 'Website Tips');
+  el(`<div class="pill">${esc(D.kicker || 'For small business owners')}</div>`, { position: 'absolute', left: '50%', top: (180 + dy) + 'px', transform: 'translateX(-50%)', zIndex: 5 });
+  const stk = topStack(D.title || 'Is your website\n*losing you customers?*', D.sub || 'Swipe to check these 5 signs →', { top: 270, maxH: 330, size: 104 });
+  const cy = Math.max(stk.getBoundingClientRect().bottom + 70, 0);
+  // stack of mini cards preview
+  const prev = (D.preview || []).slice(0, 3);
+  prev.forEach((p, i) => {
+    el(`<div class="card" style="left:${150 + i * 40}px;right:${150 - i * 40}px;top:${cy + i * 112}px;padding:24px 32px;display:flex;align-items:center;gap:22px;transform:rotate(${[-3,2,-1][i]}deg)">
+      <div class="tile" style="padding:0;box-shadow:none;background:none"><div class="ic" style="margin:0">${icon(p.icon)}</div></div>
+      <div style="font:700 34px 'Jakarta';letter-spacing:-.02em">${esc(p.t)}</div></div>`);
+  });
+  sparkle(40, 330 + dy, 160, 1); sparkle(940, cy - 40, 20, 1);
+  if (TALL) cta(D.cta || "Comment 'WEBSITE'", 300); else swipe(780, 1222);
+  foot();
+};
+
+L.t_tip = () => {
+  swoosh(['tr', 'bl', 'br', 'tl', 'tr'][(+D.i || 0) % 5]);
+  label(D.n || '02', D.label || 'Tip');
+  el(`<div class="num">${esc(String(D.i || 1).padStart(2, '0'))}</div>`, { position: 'absolute', left: '76px', top: (160 + dy) + 'px', zIndex: 2, opacity: .9, fontSize: '270px' });
+  el(`<div class="tile" style="position:absolute;right:90px;top:${210 + dy}px;width:210px;height:210px;border-radius:44px;display:grid;place-items:center;padding:0;transform:rotate(6deg)"><div style="width:110px;height:110px">${icon(D.icon || 'bolt', '#5334f1', 2)}</div></div>`);
+  topStack(D.title || 'Your phone number is\n*hard to find*', '', { top: 480, left: 80, right: 80, align: 'left', maxH: 250, size: 96 });
+  el(`<div class="card" style="left:80px;right:80px;top:${790 + dy}px;padding:52px 96px 52px 56px;transform:rotate(-1deg)">${CLIP}
+     <div style="font:600 38px/1.45 'Inter';color:#1f2637;letter-spacing:-.01em">${fmt(D.body || '')}</div>
+     ${D.fix ? `<div style="margin-top:22px;display:flex;gap:16px;align-items:flex-start"><span class="tick" style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--blue);display:grid;place-items:center"><span style="width:26px;height:26px;display:block">${TICK}</span></span><div style="font:700 33px/1.4 'Jakarta';color:var(--blue);letter-spacing:-.01em">${esc(D.fix)}</div></div>` : ''}
+   </div>`);
+  swipe(780, 1222 + (TALL ? 400 : 0));
+  foot();
+};
+
+L.t_cta = () => {
+  swoosh('tl'); swoosh('br');
+  label(D.n || '07', D.label || 'Take Action');
+  topStack(D.title || 'Want a website that\n*brings you customers?*', D.sub || "Comment <b>'WEBSITE'</b> and I'll make a <b>free demo homepage</b> for your business.", { maxH: 240, size: 96, subW: 820 });
+  const ck = checklist(150, 560 + dy, 780, D.checks || ['Free demo homepage — no cost', 'Made with your photos & logo', 'Mobile friendly & fast', 'Built to get you calls', 'No obligation at all'], -2);
+  ck.querySelectorAll('.check').forEach(n => { n.style.fontSize = '36px'; n.style.margin = '22px 0'; });
+  ck.querySelectorAll('.tick').forEach(n => { n.style.width = '48px'; n.style.height = '48px'; });
+  curlyArrowDown(870, 900 + dy, 0.85);
+  sparkle(60, 560 + dy, 160, 1.1);
+  cta(D.cta || "Comment 'WEBSITE'", TALL ? 300 : 110);
+  if (TALL) foot();
+};
+
+const FONTS = ['500','600','700','800'].map(w => document.fonts.load(w + ' 40px Jakarta')).concat(['400','500','600','700'].map(w => document.fonts.load(w + ' 40px Inter')));
+Promise.all(FONTS).then(() => {
+(L[D.layout] || L.p_hook)();
+
+// wait for fonts + images, then signal ready
+Promise.all([document.fonts.ready, ...[...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))])
+  .then(() => setTimeout(() => { window.READY = true; }, 150));
+});
+</script></body></html>
