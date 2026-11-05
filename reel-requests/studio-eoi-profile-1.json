@@ -1,0 +1,1 @@
+{"kind": "studio", "id": "eoi-profile-1", "out_dir": "reels/studio/eoi-profile-1", "jobs": [{"type": "render", "template": "profile", "out": "profile.jpg", "w": 1080, "h": 1080, "data": {}}]}
