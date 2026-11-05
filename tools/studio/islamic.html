@@ -1,0 +1,95 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: 'Amiri'; font-weight: 400; src: url('../../brand/fonts/amiri-arabic-400-normal.woff2'); }
+@font-face { font-family: 'Amiri'; font-weight: 700; src: url('../../brand/fonts/amiri-arabic-700-normal.woff2'); }
+@font-face { font-family: 'Nastaliq'; font-weight: 400; src: url('../../brand/fonts/noto-nastaliq-urdu-arabic-400-normal.woff2'); }
+@font-face { font-family: 'Nastaliq'; font-weight: 600; src: url('../../brand/fonts/noto-nastaliq-urdu-arabic-600-normal.woff2'); }
+@font-face { font-family: 'Nastaliq'; font-weight: 700; src: url('../../brand/fonts/noto-nastaliq-urdu-arabic-700-normal.woff2'); }
+@font-face { font-family: 'Cormorant'; font-weight: 600; src: url('../../brand/fonts/cormorant-garamond-latin-600-normal.woff2'); }
+@font-face { font-family: 'Cormorant'; font-weight: 700; src: url('../../brand/fonts/cormorant-garamond-latin-700-normal.woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; src: url('../../brand/fonts/inter-latin-600-normal.woff2'); }
+:root { --green: #0d4a3a; --green2: #13624d; --gold: #b8893a; --gold2: #d9b26a; --paper: #fbf6ea; --ink: #1f2a26; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; }
+body { background: var(--paper); overflow: hidden; -webkit-font-smoothing: antialiased; }
+.canvas { position: relative; width: 100%; height: 100%; overflow: hidden;
+  background: radial-gradient(1200px 800px at 50% 0%, #fffdf6 0%, rgba(255,253,246,0) 70%), radial-gradient(900px 700px at 50% 110%, rgba(19,98,77,.10), transparent 70%), var(--paper); }
+.pattern { position: absolute; inset: 0; opacity: .16; }
+.frame { position: absolute; inset: 34px; border: 3px solid var(--gold); border-radius: 26px; }
+.frame::after { content: ''; position: absolute; inset: 12px; border: 1.5px solid var(--gold2); border-radius: 18px; }
+.corner { position: absolute; width: 120px; height: 120px; }
+.head { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 18px; z-index: 3; }
+.pill { display: inline-flex; align-items: center; gap: 14px; background: var(--green); color: #f6e7c6; border-radius: 999px; padding: 14px 34px;
+  font: 700 26px 'Cormorant'; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 12px 26px -14px rgba(13,74,58,.7); }
+.pill .ur2 { font: 600 30px/1 'Nastaliq'; letter-spacing: 0; padding-top: 8px; color: #f3d99a; }
+.pill .sep { width: 2px; height: 30px; background: rgba(243,217,154,.5); }
+.orn { width: 420px; height: 34px; }
+.body { position: absolute; left: 96px; right: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; z-index: 3; }
+.ar { direction: rtl; text-align: center; font: 700 60px/1.75 'Amiri'; color: var(--green); width: 100%; }
+.div { width: 260px; height: 26px; }
+.ur { direction: rtl; text-align: center; font: 400 36px/2.05 'Nastaliq'; color: var(--ink); width: 100%; }
+.ref { display: inline-flex; align-items: center; gap: 18px; border: 2px solid var(--gold); color: #6b4d17; background: rgba(217,178,106,.14); border-radius: 999px; padding: 6px 30px 8px; }
+.ref .r1 { direction: rtl; font: 700 34px/1.9 'Nastaliq'; }
+.ref .r2 { font: 700 27px 'Cormorant'; letter-spacing: .04em; }
+.foot { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 22px; z-index: 3; color: var(--green); font: 600 22px 'Inter'; letter-spacing: .02em; }
+.foot img { height: 58px; }
+.foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.arch { position: absolute; left: 70px; right: 70px; z-index: 1; }
+</style>
+<script>/*__DATA__*/</script>
+</head><body><div class="canvas" id="c"></div>
+<script>
+const D = window.DATA || {};
+const H = innerHeight, TALL = H > 1500;
+const c = document.getElementById('c');
+const ROOT = D._root || '../../';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const add = (html, style) => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstChild; if (style) Object.assign(n.style, style); c.appendChild(n); return n; };
+
+// 8-point star (khatam) tiling as a background pattern
+add(`<svg class="pattern" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="120" height="120" patternUnits="userSpaceOnUse">
+  <g fill="none" stroke="#b8893a" stroke-width="2">
+   <rect x="35" y="35" width="50" height="50"/><rect x="35" y="35" width="50" height="50" transform="rotate(45 60 60)"/>
+   <circle cx="60" cy="60" r="9"/><path d="M0 0 L25 25 M120 0 L95 25 M0 120 L25 95 M120 120 L95 95"/>
+  </g></pattern></defs><rect width="100%" height="100%" fill="url(#p)"/></svg>`);
+add(`<div class="frame"></div>`);
+const CORNER = `<svg viewBox="0 0 120 120"><g fill="none" stroke="#b8893a" stroke-width="3" stroke-linecap="round"><path d="M10 70 C 10 35, 35 10, 70 10"/><path d="M24 70 C 24 44, 44 24, 70 24"/><circle cx="24" cy="24" r="7" fill="#d9b26a" stroke="none"/><path d="M70 10 l10 -0 M10 70 l0 10"/></g></svg>`;
+[['left:40px;top:40px', ''], ['right:40px;top:40px', 'scaleX(-1)'], ['left:40px;bottom:40px', 'scaleY(-1)'], ['right:40px;bottom:40px', 'scale(-1,-1)']].forEach(([pos, tf]) =>
+  add(`<div class="corner" style="${pos};transform:${tf}">${CORNER}</div>`));
+const ORN = `<svg class="orn" viewBox="0 0 420 34"><g fill="none" stroke="#b8893a" stroke-width="2.4" stroke-linecap="round"><path d="M10 17 H160"/><path d="M260 17 H410"/>
+  <path d="M170 17 L190 5 L210 17 L190 29 Z" fill="#d9b26a"/><path d="M210 17 L230 5 L250 17 L230 29 Z"/><circle cx="160" cy="17" r="3.5" fill="#b8893a"/><circle cx="260" cy="17" r="3.5" fill="#b8893a"/></g></svg>`;
+const DIV = `<svg class="div" viewBox="0 0 260 26"><g fill="none" stroke="#b8893a" stroke-width="2" stroke-linecap="round"><path d="M10 13 H100 M160 13 H250"/><path d="M130 3 L140 13 L130 23 L120 13 Z" fill="#d9b26a"/><circle cx="108" cy="13" r="3" fill="#b8893a"/><circle cx="152" cy="13" r="3" fill="#b8893a"/></g></svg>`;
+
+const isAyah = D.kind === 'ayah';
+const top0 = TALL ? 210 : 92;
+add(`<div class="head" style="top:${top0}px">
+  <div class="pill"><span>${isAyah ? 'Ayah of the Day' : 'Hadith of the Day'}</span><span class="sep"></span><span class="ur2">${isAyah ? 'آج کی آیت' : 'آج کی حدیث'}</span></div>${ORN}</div>`);
+
+const foot = add(`<div class="foot" style="bottom:${TALL ? 200 : 84}px"><img src="${ROOT}brand/eoi-logo.png" onerror="this.style.display='none'"><span class="dot"></span><span>@educationofislam9</span><span class="dot"></span><span>educationofislam.com</span></div>`);
+
+const bodyTop = top0 + 150, bodyBottom = (TALL ? 200 : 84) + 90;
+const body = add(`<div class="body" style="top:${bodyTop}px;bottom:${bodyBottom}px">
+  ${isAyah && D.bismillah ? '<div class="ar" style="font-size:40px;line-height:1.4;color:#8a6a2c">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>' : ''}
+  <div class="ar" id="ar">${esc(D.arabic)}</div>${DIV}<div class="ur" id="ur">${esc(D.urdu).replace(/ﷺ/g, '<span style="font-family:Amiri;font-weight:700">ﷺ</span>')}</div>
+  <div class="ref"><span class="r1">${esc(D.ref_ur)} <bdi dir="ltr">${esc(D.ref_num || '')}</bdi></span>${D.ref_en ? `<span class="r2">${esc(D.ref_en)}</span>` : ''}</div></div>`);
+
+function fitAll() {
+  // shrink Arabic and Urdu together until everything fits inside the body box
+  const ar = document.getElementById('ar'), ur = document.getElementById('ur');
+  let a = D.ar_size || (isAyah ? (TALL ? 96 : 86) : (TALL ? 74 : 64)), u = D.ur_size || (isAyah ? (TALL ? 52 : 46) : (TALL ? 46 : 40));
+  const avail = body.clientHeight;
+  const content = () => [...body.children].reduce((s, n) => s + n.getBoundingClientRect().height, 0) + 26 * (body.children.length - 1);
+  ar.style.fontSize = a + 'px'; ur.style.fontSize = u + 'px';
+  while (content() > avail && (a > 30 || u > 24)) { a = Math.max(30, a - 2); u = Math.max(24, u - (a > 44 ? 0.5 : 1.2)); ar.style.fontSize = a + 'px'; ur.style.fontSize = u + 'px'; }
+  window.FIT = { a, u, ok: content() <= avail };
+}
+
+const FONTS = [document.fonts.load('700 40px Amiri', 'بسم'), document.fonts.load('400 40px Nastaliq', 'حدیث'), document.fonts.load('700 40px Nastaliq', 'حدیث'),
+  document.fonts.load('700 30px Cormorant'), document.fonts.load('600 20px Inter')];
+Promise.all(FONTS).then(() => {
+  fitAll();
+  Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })))
+    .then(() => setTimeout(() => { window.READY = true; }, 200));
+});
+</script></body></html>
