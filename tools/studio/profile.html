@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;width:100%;height:100%;background:#fbf6ea;overflow:hidden}canvas{display:block}</style>
+<script>/*__DATA__*/</script>
+</head><body><canvas id="c"></canvas>
+<script>
+// Square profile picture: cream background, gold double ring, logo icon over the wordmark.
+const D = window.DATA || {}, ROOT = D._root || '../../';
+const S = Math.min(innerWidth, innerHeight), cv = document.getElementById('c');
+cv.width = S; cv.height = S; const g = cv.getContext('2d'), k = S / 1080, c = S / 2;
+g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, S, S);
+[[505, 10, '#b8893a'], [482, 4, '#d9b26a']].forEach(([r, w, col]) => { g.beginPath(); g.arc(c, c, r * k, 0, Math.PI * 2); g.lineWidth = w * k; g.strokeStyle = col; g.stroke(); });
+const img = new Image();
+img.onload = () => {
+  const I = [0, 17, 510, 542], W = [553, 50, 1176, 495];          // source rects: x, y, w, h
+  const ih = 430 * k, iw = I[2] * ih / I[3], ww = 640 * k, wh = W[3] * ww / W[2], gap = 40 * k;
+  const top = c - (ih + gap + wh) / 2;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(img, I[0], I[1], I[2], I[3], c - iw / 2, top, iw, ih);
+  g.drawImage(img, W[0], W[1], W[2], W[3], c - ww / 2, top + ih + gap, ww, wh);
+  window.READY = true;
+};
+img.onerror = () => { window.READY = true; };
+img.src = ROOT + 'brand/eoi-src/logo-2.png';
+</script></body></html>
