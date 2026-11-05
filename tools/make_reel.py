@@ -91,12 +91,14 @@ def main():
     todo = []
     for req in reqs:
         d = json.load(open(req))
+        if d.get("kind") or "out" not in d:
+            continue
         if not os.path.exists(d["out"]):
             todo.append(d)
     if not todo:
         print("nothing to do")
-        return
-    ensure_ffmpeg()
+    else:
+        ensure_ffmpeg()
     for d in todo:
         imgs = [p for p in d["images"] if os.path.exists(p)]
         if len(imgs) < 2:
@@ -104,6 +106,9 @@ def main():
             continue
         build(imgs, d["out"])
         print("built", d["out"])
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import studio
+    studio.main()
 
 
 if __name__ == "__main__":
