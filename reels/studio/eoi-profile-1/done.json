@@ -1,0 +1,12 @@
+{
+ "id": "eoi-profile-1",
+ "ok": true,
+ "jobs": [
+  {
+   "type": "render",
+   "out": "profile.jpg",
+   "result": null,
+   "sec": 0.1
+  }
+ ]
+}
