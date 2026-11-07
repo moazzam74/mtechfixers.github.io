@@ -150,6 +150,56 @@ def render(browser, job, out_dir):
         ctx.close()
 
 
+def ffdur(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "csv=p=0", path], capture_output=True, text=True, check=True).stdout
+    return float(out.strip())
+
+
+def prepare_audio(job, out_dir):
+    """Download recitation clips (one per ayah), join them with short pauses and
+    give the template the start/end second of every clip."""
+    lead, gap, tail = job.get("lead", 1.2), job.get("gap", 0.5), job.get("tail", 2.2)
+    def silence(name, sec):
+        p = os.path.join(out_dir, name)
+        sh(f'ffmpeg -y -loglevel error -f lavfi -t {sec:.3f} -i anullsrc=r=44100:cl=stereo -c:a pcm_s16le "{p}"')
+        return p
+    seq, segs, t = [silence("_s_lead.wav", lead)], [], lead
+    urls = job["audio"]
+    for i, url in enumerate(urls):
+        mp3 = os.path.join(out_dir, f"_a{i}.mp3")
+        for attempt in range(4):
+            try:
+                rq = urllib.request.Request(url, headers={"User-Agent": UA})
+                with urllib.request.urlopen(rq, timeout=60) as r, open(mp3, "wb") as f:
+                    f.write(r.read())
+                break
+            except Exception:
+                if attempt == 3:
+                    raise
+                time.sleep(3 * (attempt + 1))
+        wav = os.path.join(out_dir, f"_a{i}.wav")
+        sh(f'ffmpeg -y -loglevel error -i "{mp3}" -ar 44100 -ac 2 -c:a pcm_s16le "{wav}"')
+        os.remove(mp3)
+        d = ffdur(wav)
+        segs.append([round(t, 3), round(t + d, 3)])
+        seq.append(wav)
+        last = i == len(urls) - 1
+        seq.append(silence(f"_s_{i}.wav", tail if last else gap))
+        t += d + (tail if last else gap)
+    if t > job.get("max_sec", 90):
+        raise RuntimeError(f"recitation too long for a reel: {t:.1f}s")
+    lst = os.path.join(out_dir, "_list.txt")
+    open(lst, "w").write("".join(f"file '{os.path.abspath(p)}'\n" for p in seq))
+    track = os.path.join(out_dir, "_recitation.wav")
+    sh(f'ffmpeg -y -loglevel error -f concat -safe 0 -i "{lst}" -c:a pcm_s16le "{track}"')
+    for p in seq + [lst]:
+        os.remove(p)
+    job.setdefault("data", {})["_segs"] = segs
+    job["data"]["_dur"] = round(t, 3)
+    return track
+
+
 def video(browser, job, out_dir):
     """Capture an animated HTML template frame by frame and encode an MP4 with music."""
     ensure_ffmpeg()
@@ -163,6 +213,7 @@ def video(browser, job, out_dir):
         if not job["data"]["sites"]:
             raise RuntimeError("no website screenshots available for the reel")
     fps = job.get("fps", 30)
+    track = prepare_audio(job, out_dir) if job.get("audio") else None
     ctx, page = page_for(browser, job, out_dir)
     dur = page.evaluate("window.DURATION || 15")
     frames = os.path.join(out_dir, "_frames")
@@ -176,10 +227,13 @@ def video(browser, job, out_dir):
             page.screenshot(path=os.path.join(frames, f"{i:05d}.jpg"), type="jpeg", quality=92)
     finally:
         ctx.close()
-    sys.path.insert(0, os.path.join(ROOT, "tools"))
-    from make_reel import music
-    wav = os.path.join(out_dir, "_music.wav")
-    music(dur, wav)
+    if track:
+        wav = track          # Quran recitation: never mixed with music
+    else:
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        from make_reel import music
+        wav = os.path.join(out_dir, "_music.wav")
+        music(dur, wav)
     out = os.path.join(out_dir, job["out"])
     sh(f'ffmpeg -y -loglevel error -framerate {fps} -i "{frames}/%05d.jpg" -i "{wav}" '
        f'-c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -r {fps} '
