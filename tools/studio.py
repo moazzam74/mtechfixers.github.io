@@ -240,6 +240,14 @@ def video(browser, job, out_dir):
        f'-c:a aac -b:a 160k -ar 44100 -shortest -movflags +faststart "{out}"')
     shutil.rmtree(frames, ignore_errors=True)
     os.remove(wav)
+    # cover image for Instagram / Facebook: a frame with the full design, never the blank intro frame
+    try:
+        segs = job.get("data", {}).get("_segs")
+        at = job.get("cover_at") or (segs[0][0] + 1.0 if segs else dur * 0.3)
+        cov = os.path.join(out_dir, "cover.jpg")
+        sh(f'ffmpeg -y -loglevel error -ss {at:.2f} -i "{out}" -frames:v 1 -q:v 2 "{cov}"')
+    except Exception as e:
+        print("cover failed", e)
 
 
 def main():
