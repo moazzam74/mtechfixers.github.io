@@ -1,0 +1,12 @@
+{
+ "id": "eq1794150122723",
+ "ok": true,
+ "jobs": [
+  {
+   "type": "video",
+   "out": "reel.mp4",
+   "result": null,
+   "sec": 59.3
+  }
+ ]
+}
