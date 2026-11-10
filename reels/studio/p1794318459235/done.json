@@ -1,0 +1,57 @@
+{
+ "id": "p1794318459235",
+ "ok": true,
+ "jobs": [
+  {
+   "type": "shoot",
+   "out": "s",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 22.1
+  },
+  {
+   "type": "render",
+   "out": "1.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "2.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "3.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "4.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "5.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "6.jpg",
+   "result": null,
+   "sec": 0.3
+  },
+  {
+   "type": "render",
+   "out": "story.jpg",
+   "result": null,
+   "sec": 0.3
+  }
+ ]
+}
