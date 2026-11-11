@@ -7,59 +7,239 @@
 @font-face { font-family: 'Nastaliq'; font-weight: 700; src: url('../../brand/fonts/noto-nastaliq-urdu-arabic-700-normal.woff2'); }
 @font-face { font-family: 'Cormorant'; font-weight: 700; src: url('../../brand/fonts/cormorant-garamond-latin-700-normal.woff2'); }
 @font-face { font-family: 'Inter'; font-weight: 600; src: url('../../brand/fonts/inter-latin-600-normal.woff2'); }
-:root { --green: #0d4a3a; --gold: #b8893a; --gold2: #d9b26a; --paper: #fbf6ea; --ink: #1f2a26; }
+/* Three animated looks, picked per day (or by DATA.style): night sky, Islamic geometry, dawn over water.
+   Every frame is drawn from the time value given to TICK(), so the recording is exact and repeatable. */
+:root { --gold: #c99a45; --gold2: #e6c27a; --ar: #f7e9c4; --ur: #eef1ec; --head: #f3d99a; --sub: #e4c98d; --pillbg: #0d4a3a; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; }
-body { background: var(--paper); overflow: hidden; -webkit-font-smoothing: antialiased; }
-.canvas { position: relative; width: 100%; height: 100%; overflow: hidden;
-  background: radial-gradient(1200px 900px at 50% 0%, #fffdf6 0%, rgba(255,253,246,0) 70%), radial-gradient(900px 800px at 50% 110%, rgba(19,98,77,.10), transparent 70%), var(--paper); }
-.pattern { position: absolute; inset: 0; opacity: .14; }
-.frame { position: absolute; inset: 34px; border: 3px solid var(--gold); border-radius: 26px; }
-.frame::after { content: ''; position: absolute; inset: 12px; border: 1.5px solid var(--gold2); border-radius: 18px; }
+body { background: #050b1f; overflow: hidden; -webkit-font-smoothing: antialiased; }
+.canvas { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.frame { position: absolute; inset: 34px; border: 3px solid var(--gold); border-radius: 26px; box-shadow: 0 0 40px rgba(230,194,122,.18), inset 0 0 40px rgba(230,194,122,.10); }
+.frame::after { content: ''; position: absolute; inset: 12px; border: 1.5px solid rgba(230,194,122,.55); border-radius: 18px; }
 .corner { position: absolute; width: 120px; height: 120px; }
 .abs { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; }
-.pill { display: inline-flex; align-items: center; gap: 14px; background: var(--green); color: #f6e7c6; border-radius: 999px; padding: 14px 36px;
-  font: 700 28px 'Cormorant'; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 12px 26px -14px rgba(13,74,58,.7); }
+.pill { display: inline-flex; align-items: center; gap: 14px; background: var(--pillbg); color: #f6e7c6; border-radius: 999px; padding: 14px 36px;
+  border: 2px solid rgba(230,194,122,.7); font: 700 28px 'Cormorant'; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap;
+  box-shadow: 0 0 34px rgba(230,194,122,.25); }
 .pill .ur2 { font: 700 32px/1 'Nastaliq'; letter-spacing: 0; padding-top: 8px; color: #f3d99a; }
 .pill .sep { width: 2px; height: 30px; background: rgba(243,217,154,.5); }
-.surah { direction: rtl; font: 700 76px/1.5 'Amiri'; color: var(--green); }
-.surah-en { font: 700 34px 'Cormorant'; color: #6b4d17; letter-spacing: .06em; }
-.bism { direction: rtl; font: 700 46px/1.5 'Amiri'; color: #8a6a2c; }
-.box { position: absolute; left: 90px; right: 90px; }
-.ayah { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; opacity: 0; }
-.ar { direction: rtl; text-align: center; font: 700 84px/1.8 'Amiri'; color: var(--green); width: 100%; }
-.ur { direction: rtl; text-align: center; font: 400 46px/2.05 'Nastaliq'; color: var(--ink); width: 100%; }
-.div { width: 260px; height: 26px; flex: none; }
-.qari { direction: rtl; font: 700 34px/1.9 'Nastaliq'; color: #6b4d17; }
-.qari-en { font: 700 26px 'Cormorant'; color: #6b4d17; letter-spacing: .08em; text-transform: uppercase; }
-.bar { width: 620px; height: 8px; border-radius: 8px; background: rgba(184,137,58,.22); overflow: hidden; margin-top: 18px; }
-.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #b8893a, #d9b26a); border-radius: 8px; }
-.foot { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 22px; color: var(--green); font: 600 24px 'Inter'; }
-.foot img { height: 62px; }
-.foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.surah { direction: rtl; font: 700 76px/1.5 'Amiri'; color: var(--head); text-shadow: 0 0 24px rgba(230,194,122,.35), 0 3px 10px rgba(0,0,0,.45); }
+.surah-en { font: 700 34px 'Cormorant'; color: var(--sub); letter-spacing: .06em; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.bism { direction: rtl; font: 700 46px/1.5 'Amiri'; color: var(--sub); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.box { position: absolute; left: 80px; right: 80px; }
+.ayah { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; opacity: 0; padding: 30px 30px; }
+.glow { position: absolute; left: -10px; right: -10px; top: 6%; bottom: 6%; border-radius: 48px; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(230,194,122,.22), rgba(230,194,122,.07) 60%, transparent 100%); }
+.ar { position: relative; direction: rtl; text-align: center; font: 700 84px/1.8 'Amiri'; color: var(--ar); width: 100%;
+  text-shadow: 0 0 22px rgba(230,194,122,.45), 0 4px 14px rgba(0,0,0,.55); }
+.ur { position: relative; direction: rtl; text-align: center; font: 400 46px/2.05 'Nastaliq'; color: var(--ur); width: 100%; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
+.prog { position: relative; width: 74%; height: 5px; border-radius: 5px; background: rgba(230,194,122,.20); overflow: hidden; flex: none; }
+.prog i { position: absolute; right: 0; top: 0; bottom: 0; width: 0; border-radius: 5px; background: linear-gradient(270deg, #fff1c9, #e6c27a 40%, #c99a45); box-shadow: 0 0 14px #e6c27a; }
+.div { position: relative; width: 260px; height: 26px; flex: none; }
+.qari { direction: rtl; font: 700 34px/1.9 'Nastaliq'; color: var(--sub); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.qari-en { font: 700 26px 'Cormorant'; color: var(--sub); letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.bar { width: 620px; height: 8px; border-radius: 8px; background: rgba(230,194,122,.22); overflow: hidden; margin-top: 18px; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #c99a45, #e6c27a); border-radius: 8px; }
+.foot { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 22px; color: #f1e6c8; font: 600 24px 'Inter'; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.foot .logo { background: rgba(251,246,234,.94); border-radius: 18px; padding: 8px 16px; display: flex; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+.foot img { height: 50px; }
+.foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold2); }
 </style>
 <script>/*__DATA__*/</script>
-</head><body><div class="canvas" id="c"></div>
+</head><body><div class="canvas" id="c"><canvas id="bg" width="1080" height="1920"></canvas></div>
 <script>
 const D = window.DATA || {};
 const ROOT = D._root || '../../';
 const c = document.getElementById('c');
+const W = 1080, H = 1920;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const add = (html, style) => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstChild; if (style) Object.assign(n.style, style); c.appendChild(n); return n; };
 const AY = D.ayahs || [];
 const SEGS = D._segs || AY.map((a, i) => [1.2 + i * 6, 1.2 + i * 6 + 5.5]);
 window.DURATION = D._dur || (SEGS.length ? SEGS[SEGS.length - 1][1] + 2 : 10);
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const ease = x => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
 
-add(`<svg class="pattern" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="120" height="120" patternUnits="userSpaceOnUse">
-  <g fill="none" stroke="#b8893a" stroke-width="2"><rect x="35" y="35" width="50" height="50"/><rect x="35" y="35" width="50" height="50" transform="rotate(45 60 60)"/>
-  <circle cx="60" cy="60" r="9"/><path d="M0 0 L25 25 M120 0 L95 25 M0 120 L25 95 M120 120 L95 95"/></g></pattern></defs><rect width="100%" height="100%" fill="url(#p)"/></svg>`);
+// ---- which look: DATA.style if given, otherwise it changes every day (Pakistan date) ----
+const STYLES = ['night', 'geometric', 'nature'];
+const pkDay = Math.floor((Date.now() + 5 * 3600000) / 86400000);
+const STYLE = STYLES.includes(D.style) ? D.style : STYLES[pkDay % STYLES.length];
+
+// seeded random, so a style always looks the same for the same reel
+let seed = (D.seed || 20261111) >>> 0;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+
+const cv = document.getElementById('bg'), g = cv.getContext('2d');
+const layer = () => { const k = document.createElement('canvas'); k.width = W; k.height = H; return k; };
+
+// ================= NIGHT SKY =================
+function makeNight() {
+  const stars = Array.from({ length: 260 }, () => ({ x: rnd() * W, y: rnd() * H * 0.86, r: 0.6 + Math.pow(rnd(), 3) * 2.6, p: rnd() * 6.28, s: 0.6 + rnd() * 2.2 }));
+  const shoot = Array.from({ length: 4 }, (_, i) => ({ at: 3 + i * 9 + rnd() * 3, x: 150 + rnd() * 700, y: 120 + rnd() * 420 }));
+  const moon = layer(), m = moon.getContext('2d');
+  const mx = 900, my = 360, mr = 52;
+  m.fillStyle = '#f6e3b0'; m.beginPath(); m.arc(mx, my, mr, 0, 7); m.fill();
+  m.globalCompositeOperation = 'destination-out'; m.beginPath(); m.arc(mx + 24, my - 14, mr * 0.9, 0, 7); m.fill();
+  // mosque skyline
+  const sky = layer(), s = sky.getContext('2d');
+  s.fillStyle = '#030714';
+  const base = H - 60;
+  s.beginPath(); s.moveTo(0, H); s.lineTo(0, base);
+  const dome = (cx, r, h) => { s.lineTo(cx - r, base - h); s.quadraticCurveTo(cx - r, base - h - r * 1.25, cx, base - h - r * 1.55); s.quadraticCurveTo(cx + r, base - h - r * 1.25, cx + r, base - h); };
+  const minaret = (cx, w, h) => { s.lineTo(cx - w, base); s.lineTo(cx - w, base - h); s.lineTo(cx - w * 1.6, base - h); s.lineTo(cx, base - h - w * 3.2); s.lineTo(cx + w * 1.6, base - h); s.lineTo(cx + w, base - h); s.lineTo(cx + w, base); };
+  s.lineTo(120, base); minaret(170, 11, 210); s.lineTo(300, base); s.lineTo(300, base - 70); dome(400, 70, 70); s.lineTo(500, base - 70);
+  s.lineTo(500, base - 110); dome(540, 130, 110); s.lineTo(670, base - 110); s.lineTo(670, base - 70); dome(770, 70, 70);
+  s.lineTo(840, base - 70); s.lineTo(840, base); minaret(910, 11, 210); s.lineTo(W, base); s.lineTo(W, H); s.closePath(); s.fill();
+  return t => {
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#030716'); bg.addColorStop(0.45, '#0a1734'); bg.addColorStop(0.8, '#14284a'); bg.addColorStop(1, '#1d2f4e');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // slow aurora bands
+    g.globalCompositeOperation = 'lighter';
+    [[0.08, '42,140,120', 0.10], [0.05, '201,154,69', 0.07], [0.065, '70,90,170', 0.08]].forEach(([sp, col, a], i) => {
+      const x = W / 2 + Math.sin(t * sp + i * 2) * 360, y = 520 + i * 360 + Math.cos(t * sp * 1.3 + i) * 120;
+      const gr = g.createRadialGradient(x, y, 0, x, y, 620);
+      gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    });
+    // twinkling stars
+    stars.forEach(st => {
+      const a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * st.s + st.p));
+      g.fillStyle = `rgba(255,244,214,${a})`; g.beginPath(); g.arc(st.x, st.y, st.r, 0, 7); g.fill();
+      if (st.r > 2) { g.fillStyle = `rgba(255,236,190,${a * 0.18})`; g.beginPath(); g.arc(st.x, st.y, st.r * 4, 0, 7); g.fill(); }
+    });
+    // an occasional shooting star
+    shoot.forEach(sh => { const k = (t - sh.at) / 1.1; if (k < 0 || k > 1) return;
+      const x = sh.x + k * 420, y = sh.y + k * 200, a = Math.sin(k * Math.PI);
+      const ln = g.createLinearGradient(x, y, x - 160, y - 76); ln.addColorStop(0, `rgba(255,246,220,${a})`); ln.addColorStop(1, 'rgba(255,246,220,0)');
+      g.strokeStyle = ln; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x, y); g.lineTo(x - 160, y - 76); g.stroke(); });
+    // moon glow + crescent
+    const mg = g.createRadialGradient(900, 360, 30, 900, 360, 260); mg.addColorStop(0, 'rgba(246,227,176,.28)'); mg.addColorStop(1, 'rgba(246,227,176,0)');
+    g.fillStyle = mg; g.fillRect(560, 60, 540, 600);
+    g.globalCompositeOperation = 'source-over';
+    g.drawImage(moon, 0, Math.sin(t * 0.4) * 6);
+    g.drawImage(sky, 0, 0);
+    vignette(0.55);
+  };
+}
+
+// ================= ISLAMIC GEOMETRY =================
+function star8(ctx, x, y, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, rr = i % 2 ? r * 0.62 : r; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  ctx.closePath();
+}
+function makeGeometric() {
+  const S = 2400, tile = 150;
+  const pat = document.createElement('canvas'); pat.width = pat.height = S;
+  const p = pat.getContext('2d');
+  p.strokeStyle = '#e6c27a'; p.lineWidth = 2.4;
+  for (let y = 0; y <= S; y += tile) for (let x = 0; x <= S; x += tile) {
+    star8(p, x, y, 52); p.stroke();
+    p.beginPath(); p.arc(x, y, 14, 0, 7); p.stroke();
+    p.beginPath(); p.moveTo(x + 52, y); p.lineTo(x + tile - 52, y); p.moveTo(x, y + 52); p.lineTo(x, y + tile - 52); p.stroke();
+    p.save(); p.translate(x + tile / 2, y + tile / 2); p.rotate(Math.PI / 4); p.strokeRect(-20, -20, 40, 40); p.restore();
+  }
+  const rose = document.createElement('canvas'); rose.width = rose.height = 1000;
+  const r = rose.getContext('2d'); r.strokeStyle = '#e6c27a'; r.lineWidth = 3;
+  for (let k = 0; k < 4; k++) { r.save(); r.translate(500, 500); r.rotate(k * Math.PI / 16); star8(r, 0, 0, 460 - k * 70); r.stroke(); r.restore(); }
+  for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16; r.beginPath(); r.moveTo(500 + Math.cos(a) * 140, 500 + Math.sin(a) * 140); r.lineTo(500 + Math.cos(a) * 470, 500 + Math.sin(a) * 470); r.stroke(); }
+  const tmp = layer(), tg = tmp.getContext('2d');
+  const dust = Array.from({ length: 70 }, () => ({ x: rnd() * W, y: rnd() * H, r: 1 + rnd() * 2.6, s: 18 + rnd() * 40, p: rnd() * 6.28 }));
+  return t => {
+    const bg = g.createRadialGradient(W / 2, H * 0.46, 80, W / 2, H * 0.46, 1250);
+    bg.addColorStop(0, '#13684f'); bg.addColorStop(0.55, '#0a3f31'); bg.addColorStop(1, '#041d17');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const ang = t * 0.012, sc = 1 + Math.sin(t * 0.35) * 0.025;
+    const drawPat = (ctx, a) => { ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, H / 2); ctx.rotate(ang); ctx.scale(sc, sc); ctx.drawImage(pat, -S / 2, -S / 2); ctx.restore(); };
+    drawPat(g, 0.11);
+    // a band of light sweeping across the pattern
+    tg.globalCompositeOperation = 'source-over'; tg.clearRect(0, 0, W, H); drawPat(tg, 1);
+    tg.globalCompositeOperation = 'destination-in';
+    const cyc = (t % 7) / 7, bx = -700 + cyc * (W + 1400);
+    const band = tg.createLinearGradient(bx - 260, 0, bx + 260, H * 0.35);
+    band.addColorStop(0, 'rgba(0,0,0,0)'); band.addColorStop(0.5, 'rgba(0,0,0,.5)'); band.addColorStop(1, 'rgba(0,0,0,0)');
+    tg.fillStyle = band; tg.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter'; g.drawImage(tmp, 0, 0);
+    // big rosette behind the verse, turning the other way
+    g.save(); g.globalAlpha = 0.09 + 0.03 * Math.sin(t * 0.8); g.translate(W / 2, 1010); g.rotate(-t * 0.05); g.drawImage(rose, -500, -500); g.restore();
+    // gold dust rising
+    dust.forEach(d => { const y = ((d.y - t * d.s) % H + H) % H, x = d.x + Math.sin(t * 0.7 + d.p) * 18, a = 0.25 + 0.5 * (0.5 + 0.5 * Math.sin(t * 2 + d.p));
+      g.fillStyle = `rgba(240,205,130,${a})`; g.beginPath(); g.arc(x, y, d.r, 0, 7); g.fill(); });
+    g.globalCompositeOperation = 'source-over';
+    const sh = g.createRadialGradient(W / 2, 1000, 60, W / 2, 1000, 720); sh.addColorStop(0, 'rgba(3,26,20,.55)'); sh.addColorStop(1, 'rgba(3,26,20,0)');
+    g.fillStyle = sh; g.fillRect(0, 0, W, H);
+    vignette(0.6);
+  };
+}
+
+// ================= DAWN OVER WATER =================
+function makeNature() {
+  const HZ = 1488; // horizon sits between the verse and the reciter line
+  const puff = (ctx, x, y, w, h, a) => { for (let i = 0; i < 9; i++) { const px = x + (rnd() - 0.5) * w, py = y + (rnd() - 0.5) * h * 0.5, pr = h * (0.35 + rnd() * 0.45);
+    const gr = ctx.createRadialGradient(px, py, 0, px, py, pr); gr.addColorStop(0, `rgba(255,226,206,${a})`); gr.addColorStop(1, 'rgba(255,226,206,0)'); ctx.fillStyle = gr; ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2); } };
+  const clouds = Array.from({ length: 3 }, (_, k) => { const cvs = document.createElement('canvas'); cvs.width = 2 * W; cvs.height = 520; const ctx = cvs.getContext('2d');
+    for (let i = 0; i < 9; i++) puff(ctx, 120 + rnd() * (2 * W - 240), 260, 420, 200 + k * 50, 0.10 + k * 0.05); return { cvs, y: 180 + k * 400, sp: 10 + k * 9 }; });
+  const glints = Array.from({ length: 110 }, () => ({ y: HZ + 8 + Math.pow(rnd(), 1.6) * (H - HZ), p: rnd() * 6.28, s: 1 + rnd() * 3 }));
+  return t => {
+    const sky = g.createLinearGradient(0, 0, 0, HZ);
+    sky.addColorStop(0, '#0f1733'); sky.addColorStop(0.35, '#2b2a55'); sky.addColorStop(0.68, '#7a4a6e'); sky.addColorStop(0.9, '#d7845e'); sky.addColorStop(1, '#f2b46e');
+    g.fillStyle = sky; g.fillRect(0, 0, W, HZ);
+    const sy = HZ + 40 - ease(t / 30) * 90;
+    const sg = g.createRadialGradient(W / 2, sy, 10, W / 2, sy, 620); sg.addColorStop(0, 'rgba(255,214,150,.75)'); sg.addColorStop(0.25, 'rgba(255,170,110,.32)'); sg.addColorStop(1, 'rgba(255,150,100,0)');
+    g.fillStyle = sg; g.fillRect(0, 0, W, HZ);
+    g.fillStyle = '#ffe3a8'; g.beginPath(); g.arc(W / 2, sy, 78, 0, 7); g.fill();
+    clouds.forEach(cl => { const x = -((t * cl.sp) % W); g.drawImage(cl.cvs, x, cl.y); g.drawImage(cl.cvs, x + 2 * W - 2, cl.y); });
+    // water
+    const sea = g.createLinearGradient(0, HZ, 0, H); sea.addColorStop(0, '#5a3d55'); sea.addColorStop(0.25, '#2a2440'); sea.addColorStop(1, '#0b0f22');
+    g.fillStyle = sea; g.fillRect(0, HZ, W, H - HZ);
+    g.globalCompositeOperation = 'lighter';
+    glints.forEach(gl => { const k = (gl.y - HZ) / (H - HZ), wdt = 40 + k * 260, x = W / 2 + Math.sin(t * 0.9 + gl.p) * (30 + k * 140), a = (0.5 + 0.5 * Math.sin(t * gl.s + gl.p)) * (0.45 - k * 0.32);
+      g.fillStyle = `rgba(255,205,140,${a})`; g.fillRect(x - wdt / 2, gl.y, wdt, 2 + k * 3); });
+    g.globalCompositeOperation = 'source-over';
+    // soft darkening behind the verse so the words stay clear
+    const sh = g.createRadialGradient(W / 2, 1000, 60, W / 2, 1000, 760); sh.addColorStop(0, 'rgba(8,10,28,.55)'); sh.addColorStop(1, 'rgba(8,10,28,0)');
+    g.fillStyle = sh; g.fillRect(0, 0, W, H);
+    const sl = g.createLinearGradient(0, 1510, 0, 1680); sl.addColorStop(0, 'rgba(8,10,28,0)'); sl.addColorStop(0.5, 'rgba(8,10,28,.6)'); sl.addColorStop(1, 'rgba(8,10,28,0)');
+    g.fillStyle = sl; g.fillRect(0, 1510, W, 170);
+    vignette(0.45);
+  };
+}
+
+function vignette(a) {
+  const v = g.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.78);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${a})`);
+  g.fillStyle = v; g.fillRect(0, 0, W, H);
+}
+
+// Over a real nature clip the page stays transparent: only a soft shade behind the words is drawn.
+function makeScrim() {
+  const kind = D._bgkind || '';
+  const base = kind === 'night' ? 0.18 : 0.32;
+  return t => {
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = `rgba(6,9,22,${base})`; g.fillRect(0, 0, W, H);
+    const top = g.createLinearGradient(0, 0, 0, 560); top.addColorStop(0, 'rgba(6,9,22,.55)'); top.addColorStop(1, 'rgba(6,9,22,0)');
+    g.fillStyle = top; g.fillRect(0, 0, W, 560);
+    const mid = g.createRadialGradient(W / 2, 1000, 80, W / 2, 1000, 760); mid.addColorStop(0, 'rgba(6,9,22,.55)'); mid.addColorStop(1, 'rgba(6,9,22,0)');
+    g.fillStyle = mid; g.fillRect(0, 0, W, H);
+    const bot = g.createLinearGradient(0, 1440, 0, H); bot.addColorStop(0, 'rgba(6,9,22,0)'); bot.addColorStop(0.35, 'rgba(6,9,22,.6)'); bot.addColorStop(1, 'rgba(6,9,22,.75)');
+    g.fillStyle = bot; g.fillRect(0, 1440, W, H - 1440);
+    vignette(0.5);
+  };
+}
+if (D._bgvideo) { document.body.style.background = 'transparent'; }
+const DRAW = D._bgvideo ? makeScrim() : { night: makeNight, geometric: makeGeometric, nature: makeNature }[STYLE]();
+
+// ---------------- the words ----------------
 add(`<div class="frame"></div>`);
-const CORNER = `<svg viewBox="0 0 120 120"><g fill="none" stroke="#b8893a" stroke-width="3" stroke-linecap="round"><path d="M10 70 C 10 35, 35 10, 70 10"/><path d="M24 70 C 24 44, 44 24, 70 24"/><circle cx="24" cy="24" r="7" fill="#d9b26a" stroke="none"/></g></svg>`;
+const CORNER = `<svg viewBox="0 0 120 120"><g fill="none" stroke="#e6c27a" stroke-width="3" stroke-linecap="round"><path d="M10 70 C 10 35, 35 10, 70 10"/><path d="M24 70 C 24 44, 44 24, 70 24"/><circle cx="24" cy="24" r="7" fill="#e6c27a" stroke="none"/></g></svg>`;
 [['left:40px;top:40px', ''], ['right:40px;top:40px', 'scaleX(-1)'], ['left:40px;bottom:40px', 'scaleY(-1)'], ['right:40px;bottom:40px', 'scale(-1,-1)']].forEach(([pos, tf]) =>
   add(`<div class="corner" style="${pos};transform:${tf}">${CORNER}</div>`));
-const ORN = `<svg width="420" height="34" viewBox="0 0 420 34"><g fill="none" stroke="#b8893a" stroke-width="2.4" stroke-linecap="round"><path d="M10 17 H160"/><path d="M260 17 H410"/>
-  <path d="M170 17 L190 5 L210 17 L190 29 Z" fill="#d9b26a"/><path d="M210 17 L230 5 L250 17 L230 29 Z"/><circle cx="160" cy="17" r="3.5" fill="#b8893a"/><circle cx="260" cy="17" r="3.5" fill="#b8893a"/></g></svg>`;
-const DIV = `<svg class="div" viewBox="0 0 260 26"><g fill="none" stroke="#b8893a" stroke-width="2" stroke-linecap="round"><path d="M10 13 H100 M160 13 H250"/><path d="M130 3 L140 13 L130 23 L120 13 Z" fill="#d9b26a"/><circle cx="108" cy="13" r="3" fill="#b8893a"/><circle cx="152" cy="13" r="3" fill="#b8893a"/></g></svg>`;
+const ORN = `<svg width="420" height="34" viewBox="0 0 420 34"><g fill="none" stroke="#e6c27a" stroke-width="2.4" stroke-linecap="round"><path d="M10 17 H160"/><path d="M260 17 H410"/>
+  <path d="M170 17 L190 5 L210 17 L190 29 Z" fill="#e6c27a"/><path d="M210 17 L230 5 L250 17 L230 29 Z"/><circle cx="160" cy="17" r="3.5" fill="#e6c27a"/><circle cx="260" cy="17" r="3.5" fill="#e6c27a"/></g></svg>`;
+const DIV = `<svg class="div" viewBox="0 0 260 26"><g fill="none" stroke="#e6c27a" stroke-width="2" stroke-linecap="round"><path d="M10 13 H100 M160 13 H250"/><path d="M130 3 L140 13 L130 23 L120 13 Z" fill="#e6c27a"/><circle cx="108" cy="13" r="3" fill="#e6c27a"/><circle cx="152" cy="13" r="3" fill="#e6c27a"/></g></svg>`;
 
 const head = add(`<div class="abs" style="top:150px;gap:20px">
   <div class="pill"><span>Tilawat</span><span class="sep"></span><span class="ur2">تلاوتِ قرآن</span></div>${ORN}
@@ -67,31 +247,37 @@ const head = add(`<div class="abs" style="top:150px;gap:20px">
   ${D.bismillah ? '<div class="bism">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>' : ''}</div>`);
 const box = add(`<div class="box" style="top:520px;bottom:450px"></div>`);
 const blocks = AY.map(a => { const d = document.createElement('div'); d.className = 'ayah';
-  d.innerHTML = `<div class="ar">${esc(a.ar)}</div>${DIV}<div class="ur">${esc(a.ur)}</div>`; box.appendChild(d); return d; });
+  d.innerHTML = `<div class="glow"></div><div class="ar">${esc(a.ar)}</div><div class="prog"><i></i></div>${DIV}<div class="ur">${esc(a.ur)}</div>`; box.appendChild(d); return d; });
 const low = add(`<div class="abs" style="top:1528px;gap:2px">
   <div class="qari">تلاوت: شیخ مشاری راشد العفاسی</div><div class="qari-en">Recitation · Mishary Rashid Alafasy</div><div class="bar"><i id="bar"></i></div></div>`);
-add(`<div class="foot" style="bottom:120px"><img src="${ROOT}brand/eoi-logo.png" onerror="this.style.display='none'"><span class="dot"></span><span>@educationofislam9</span><span class="dot"></span><span>educationofislam.com</span></div>`);
+add(`<div class="foot" style="bottom:110px"><span class="logo"><img src="${ROOT}brand/eoi-logo.png" onerror="this.parentNode.style.display='none'"></span><span class="dot"></span><span>@educationofislam9</span><span class="dot"></span><span>educationofislam.com</span></div>`);
 
 function fit(b) {
   const ar = b.querySelector('.ar'), ur = b.querySelector('.ur');
   let a = 92, u = 50; const avail = box.clientHeight;
-  const h = () => ar.scrollHeight + ur.scrollHeight + 26 + 60;
+  const h = () => ar.scrollHeight + ur.scrollHeight + 26 + 31 + 26 * 3 + 60;
   ar.style.fontSize = a + 'px'; ur.style.fontSize = u + 'px';
   while (h() > avail && a > 36) { a -= 2; u = Math.max(28, u - 0.9); ar.style.fontSize = a + 'px'; ur.style.fontSize = u + 'px'; }
 }
 
-const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
-const ease = x => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
 window.TICK = ms => {
   const t = ms / 1000;
+  DRAW(t);
   const intro = ease(t / 0.9);
   head.style.opacity = intro; head.style.transform = `translateY(${(1 - intro) * 24}px)`;
   low.style.opacity = ease((t - 0.4) / 0.8);
   blocks.forEach((b, i) => {
     const s = SEGS[i][0] - 0.35, e = i + 1 < SEGS.length ? SEGS[i + 1][0] - 0.35 : 1e9;
-    const fin = ease((t - s) / 0.45), fout = ease((t - e) / 0.35);
+    const fin = ease((t - s) / 0.6), fout = ease((t - e) / 0.35);
     const o = t < s ? 0 : t < e ? fin : 1 - fout;
-    b.style.opacity = o; b.style.transform = `translateY(${(1 - fin) * 30}px)`;
+    b.style.opacity = o;
+    b.style.transform = `translateY(${(1 - fin) * 30}px) scale(${0.97 + 0.03 * fin})`;
+    b.style.filter = fin < 1 ? `blur(${(1 - fin) * 8}px)` : 'none';
+    // the verse being recited: a breathing glow and a line that fills as the Qari reads it
+    const live = t >= SEGS[i][0] && t <= SEGS[i][1];
+    const k = clamp((t - SEGS[i][0]) / (SEGS[i][1] - SEGS[i][0]), 0, 1);
+    b.querySelector('.glow').style.opacity = (live ? 0.75 + 0.25 * Math.sin(t * 2.4) : 0.35) * o;
+    b.querySelector('.prog i').style.width = (k * 100) + '%';
   });
   document.getElementById('bar').style.width = (clamp(t / window.DURATION, 0, 1) * 100) + '%';
 };
