@@ -200,6 +200,37 @@ def prepare_audio(job, out_dir):
     return track
 
 
+BG_LIST = os.path.join(TPL, "tilawat_bg.json")
+
+
+def pick_bg(job, out_dir):
+    """Tilawat reels sit on a real nature clip (night sky, clouds, sea).
+    A different clip is used each day; if no clip can be downloaded the template
+    falls back to its own animated background, so a reel is never lost."""
+    if job.get("template") != "tilawat" or job.get("data", {}).get("style") or job.get("no_bg_video"):
+        return None
+    try:
+        clips = json.load(open(BG_LIST, encoding="utf-8"))
+    except Exception:
+        return None
+    if not clips:
+        return None
+    day = int((time.time() + 5 * 3600) // 86400)
+    p = os.path.join(out_dir, "_bg.mp4")
+    for k in range(len(clips)):
+        c = clips[(day + k) % len(clips)]
+        try:
+            rq = urllib.request.Request(c["url"], headers={"User-Agent": UA, "Referer": "https://www.pexels.com/"})
+            with urllib.request.urlopen(rq, timeout=120) as r, open(p, "wb") as f:
+                f.write(r.read())
+            if os.path.getsize(p) > 200000:
+                print("background clip:", c.get("name"), c.get("url"))
+                return p, c
+        except Exception as e:
+            print("background clip failed:", c.get("url"), e)
+    return None
+
+
 def video(browser, job, out_dir):
     """Capture an animated HTML template frame by frame and encode an MP4 with music."""
     ensure_ffmpeg()
@@ -214,6 +245,11 @@ def video(browser, job, out_dir):
             raise RuntimeError("no website screenshots available for the reel")
     fps = job.get("fps", 30)
     track = prepare_audio(job, out_dir) if job.get("audio") else None
+    bg = pick_bg(job, out_dir)
+    if bg:
+        job.setdefault("data", {})["_bgvideo"] = True
+        job["data"]["_bgkind"] = bg[1].get("kind", "")
+    ext = "png" if bg else "jpg"
     ctx, page = page_for(browser, job, out_dir)
     dur = page.evaluate("window.DURATION || 15")
     frames = os.path.join(out_dir, "_frames")
@@ -224,7 +260,10 @@ def video(browser, job, out_dir):
         for i in range(n):
             t = i * 1000.0 / fps
             page.evaluate(f"(() => {{ const t={t}; document.getAnimations().forEach(a => a.currentTime = t); if (window.TICK) window.TICK(t); }})()")
-            page.screenshot(path=os.path.join(frames, f"{i:05d}.jpg"), type="jpeg", quality=92)
+            if bg:
+                page.screenshot(path=os.path.join(frames, f"{i:05d}.png"), type="png", omit_background=True)
+            else:
+                page.screenshot(path=os.path.join(frames, f"{i:05d}.jpg"), type="jpeg", quality=92)
     finally:
         ctx.close()
     if track:
@@ -235,9 +274,20 @@ def video(browser, job, out_dir):
         wav = os.path.join(out_dir, "_music.wav")
         music(dur, wav)
     out = os.path.join(out_dir, job["out"])
-    sh(f'ffmpeg -y -loglevel error -framerate {fps} -i "{frames}/%05d.jpg" -i "{wav}" '
-       f'-c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -r {fps} '
-       f'-c:a aac -b:a 160k -ar 44100 -shortest -movflags +faststart "{out}"')
+    if bg:
+        w, h = job.get("w", 1080), job.get("h", 1920)
+        slow = bg[1].get("slow", 1.0)
+        vf = (f"[0:v]setpts={slow}*PTS,scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},"
+              f"fps={fps},eq=saturation=1.1[b];[b][1:v]overlay=0:0:format=auto,format=yuv420p[v]")
+        sh(f'ffmpeg -y -loglevel error -stream_loop -1 -i "{bg[0]}" -framerate {fps} -i "{frames}/%05d.png" -i "{wav}" '
+           f'-filter_complex "{vf}" -map "[v]" -map 2:a -t {dur:.3f} '
+           f'-c:v libx264 -preset medium -crf 19 -r {fps} '
+           f'-c:a aac -b:a 160k -ar 44100 -movflags +faststart "{out}"')
+        os.remove(bg[0])
+    else:
+        sh(f'ffmpeg -y -loglevel error -framerate {fps} -i "{frames}/%05d.jpg" -i "{wav}" '
+           f'-c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -r {fps} '
+           f'-c:a aac -b:a 160k -ar 44100 -shortest -movflags +faststart "{out}"')
     shutil.rmtree(frames, ignore_errors=True)
     os.remove(wav)
     # cover image for Instagram / Facebook: a frame with the full design, never the blank intro frame
