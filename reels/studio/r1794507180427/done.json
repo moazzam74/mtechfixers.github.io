@@ -1,0 +1,39 @@
+{
+ "id": "r1794507180427",
+ "ok": true,
+ "jobs": [
+  {
+   "type": "shoot",
+   "out": "s1",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 15.3
+  },
+  {
+   "type": "shoot",
+   "out": "s2",
+   "result": {
+    "desktop": true,
+    "mobile": true
+   },
+   "sec": 20.9
+  },
+  {
+   "type": "shoot",
+   "out": "s3",
+   "result": {
+    "desktop": "fallback",
+    "mobile": false
+   },
+   "sec": 4.8
+  },
+  {
+   "type": "video",
+   "out": "reel.mp4",
+   "result": null,
+   "sec": 73.0
+  }
+ ]
+}
